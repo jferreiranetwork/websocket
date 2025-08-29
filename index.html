@@ -18,30 +18,39 @@
   </div>
 
   <script>
-    // Coloque seu token secreto aqui
     const TOKEN = "esp32";
-
-    // Conecta ao WebSocket incluindo o token na query string
     let ws = new WebSocket(`wss://websocket-vb5m.onrender.com/ws?token=${TOKEN}`, 'echo-protocol');
-
     let isConnected = false;
+    let clientIP = "IP-Desconhecido";
 
-    // Conexão aberta
+    // Buscar IP público
+    fetch("https://api.ipify.org?format=json")
+      .then(res => res.json())
+      .then(data => {
+        clientIP = data.ip;
+        console.log("IP detectado:", clientIP);
+      })
+      .catch(err => console.warn("Erro ao obter IP:", err));
+
     ws.onopen = () => {
       console.log('Conectado ao WS');
       isConnected = true;
     };
 
-    // Mensagem recebida
     ws.onmessage = (msg) => console.log('Mensagem recebida:', msg.data);
 
-    // Função para enviar mensagens somente quando conectado
     function send(msg) {
       if (!isConnected) {
         console.log('WebSocket ainda não conectado');
         return;
       }
+      // Envia a primeira mensagem (comando)
       ws.send(msg);
+      console.log("Enviado comando:", msg);
+
+      // Envia a segunda mensagem (IP)
+      ws.send(`IP:${clientIP}`);
+      console.log("Enviado IP:", clientIP);
     }
   </script>
 
